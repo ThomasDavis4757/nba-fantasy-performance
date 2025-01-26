@@ -21,30 +21,46 @@ library(shiny)
 
 function(input, output, session) {
   
-  
+
   plot_data <- eventReactive(input$update_btn, {
-    filtered_data()
+    nba_data |> 
+      filter(`Starters` == nameSelection(input$playerName)) |> 
+      filter(Date > input$dates[1]) |> 
+      filter(Date < input$dates[2])
   })
-  
-  
-  
-  
-  filtered_data <- reactive({
-    dataFiltered <- nba_data |> 
-      filter(`Starters` == nameSelection(input$playerName))
-    return(dataFiltered)
-  })
-  
-  
   
 
-    output$nbaData <- renderDataTable(
-      datatable(
-        plot_data(),
-        options = list(pageLength = 5)
-      )
-    )
+  update_picture <- eventReactive(input$update_btn, {
+    picture_link <- nba_data |> 
+      filter(`Starters` == nameSelection(input$playerName)) |> 
+      pull(PhotoLink)
     
-    output$value <- renderPrint({ input$dates })
+    if (length(picture_link) > 0) {
+      return(picture_link[1])  
+    } else {
+      return(NULL)
+    }
+  })
+  
+  
+  player_name <- eventReactive(input$update_btn, {
+    nameSelection(input$playerName)
+  })
+  
+  output$titlePlayerName <- renderText({
+    player_name()
+  })
+  
+ 
+  output$nbaData <- renderDataTable({
+    req(plot_data())  
+    datatable(plot_data(), options = list(pageLength = 5))
+  })
+  
 
+  output$image_html <- renderUI({
+    req(update_picture())  
+    HTML(glue('<img src="{update_picture()}" width="150" height="200">'))
+  })
+  
 }

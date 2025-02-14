@@ -9,64 +9,122 @@
 
 library(shiny)
 
-# Define UI for application that draws a histogram
+
 fluidPage(
+  theme = shinythemes::shinytheme('superhero'),
   titlePanel("NBA Player Fantasy Prediction"),
-          tabsetPanel(
-            tabPanel("Individual Player Correlation", fluid = TRUE, sidebarLayout(
-              sidebarPanel(
-
-                textInput('playerName1', label = h3("Type in Player Name")),
-                dateRangeInput("dates1", label = h3("Date range"), start = "2024-10-22", end = as.character(Sys.Date()), min = "2024-10-22", max = as.character(Sys.Date())),
-                selectInput("predictVar1", label = "Select Prediction Variable:", choices = colnames(nba_data)),
-                actionButton("update_btn1", "Update Graph")
-              ),
-              mainPanel(
-                fluidRow(
-                textOutput("titlePlayerName1"),
-                uiOutput("image_html1")
-                ),
-                dataTableOutput("nbaData1"),
-                valueBoxOutput("averageBox1"),
-                plotOutput("regressionPlot1"),
-                verbatimTextOutput("modelSummary"),
-                tableOutput("player_info_table"),
-                dataTableOutput("futurePlayerGames")
-                
-              )
-              
-              )
-            ),
-            
-            
-            tabPanel("Total Player Correlation", fluid = TRUE, 
-                     sidebarLayout(
-                       sidebarPanel(
-                         
-                         textInput('playerName', label = h3("Type in Player Name")),
-                         dateRangeInput("dates", label = h3("Date range"), start = "2024-10-22", end = as.character(Sys.Date()), min = "2024-10-22", max = as.character(Sys.Date())),
-                         selectInput("predictVar", label = "Select Prediction Variable:", choices = colnames(nba_data)),
-                         actionButton("update_btn", "Update Graph")
-                       ),
-                       mainPanel(
-                         fluidRow(
-                           textOutput("titlePlayerName"),
-                           uiOutput("image_html")
+  tabsetPanel(
+    tabPanel("Individual Player Correlation", fluid = TRUE, 
+             br(),
+             sidebarLayout(
+               sidebarPanel(
+                 textInput('playerName1', label = h3("Player #1")),
+                 textInput('playerName2', label = h3("Player #2")),
+                 textInput('playerName3', label = h3("Player #3")),
+                 
+                 actionButton("update_btn1", "Start Analysis")
+               ),
+               mainPanel(
+                 div(style = "overflow-x: auto; white-space: nowrap; display: flex;",
+                     
+                     div(style = "min-width: 650px; padding: 10px;",
+                         div(style = "display: flex; align-items: center;",  
+                             
+                             div(style = "flex: 1; text-align: center;",
+                                 textOutput("titlePlayerName1"),
+                                 br(),
+                                 uiOutput("image_html1")
+                             ),
+                             
+                             div(style = "flex: 1;",
+                                 tableOutput("player1_stats")  
+                             )
                          ),
-                         dataTableOutput("nbaData"),
-                         valueBoxOutput("averageBox"),
-                         plotOutput("regressionPlot")
-                         
-                       )
-                       
+                         br(),
+                         plotlyOutput("normalPlot1", height = "400px", width = "100%")  
+                     ),
+                     
+                     
+                     div(style = "min-width: 650px; padding: 10px;",
+                         div(style = "display: flex; align-items: center;",
+                             div(style = "flex: 1; text-align: center;",
+                                 textOutput("titlePlayerName2"),
+                                 br(),
+                                 uiOutput("image_html2")
+                             ),
+                             div(style = "flex: 1;",
+                                 tableOutput("player2_stats")
+                             )
+                         ),
+                         br(),
+                         plotlyOutput("normalPlot2", height = "400px", width = "100%")
+                     ),
+                     
+                     
+                     div(style = "min-width: 650px; padding: 10px;",
+                         div(style = "display: flex; align-items: center;",
+                             div(style = "flex: 1; text-align: center;",
+                                 textOutput("titlePlayerName3"),
+                                 br(),
+                                 uiOutput("image_html3")
+                             ),
+                             div(style = "flex: 1;",
+                                 tableOutput("player3_stats")
+                             )
+                         ),
+                         br(),
+                         plotlyOutput("normalPlot3", height = "400px", width = "100%")
                      )
-            ),
-            tabPanel("Other", fluid = TRUE, 
-                     h3("This is the Player Stats tab"),
-                     p("Content for Player Stats will go here.")
-            )
-          )
-  
-          )
-  
-
+                 )
+               )
+               
+             )
+    ),
+    tabPanel("Overall Fantasy Correlations", fluid = TRUE, 
+             br(),
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("predictVar", label = "Select Prediction Variable:", choices = selected_columns),
+                 dateRangeInput("dates", label = h3("Date range"), start = "2024-10-22", end = as.character(Sys.Date()), min = "2024-10-22", max = as.character(Sys.Date())),
+                 #selectInput("predictVar", label = "Select Prediction Variable:", choices = colnames(nba_data)),
+                 actionButton("update_btn", "Update Graph")
+               ),
+               mainPanel(
+              
+                 #valueBoxOutput("averageBox"),
+                 plotOutput("regressionPlot"),
+                 #verbatimTextOutput("modelSummaryNew1"),
+                 div(style = "font-size: 24px; font-weight: bold;", textOutput("correlationOutput")),
+                 #verbatimTextOutput("get_pvalues"),
+                 div(style = "font-size: 20px;", textOutput("pvalue_significance")),
+                 uiOutput("progress_bar_ui")
+               )
+             )
+    ),
+    tabPanel("Player Specific Stats", fluid = TRUE, 
+             br(),
+             sidebarLayout(
+               sidebarPanel(
+                 textInput('playerName', label = h3("Type in Player Name")),
+                 dateRangeInput("dates1", label = h3("Date range"), start = "2024-10-22", end = as.character(Sys.Date()), min = "2024-10-22", max = as.character(Sys.Date())),
+                 actionButton("update_btn3", "Submit")
+               ),
+               mainPanel(
+                 textOutput("playerNameStats"),
+                 br(),
+                 uiOutput("playerImage"),
+                 br(),
+                 
+                 fluidRow(
+                   column(6, tableOutput("player_stats_table")),
+                   column(6, tableOutput("player_stats_table_shooting"))
+                 ),
+                 br(),
+                 
+                 tableOutput("player_stats_table_fantasy")
+               )
+               )
+               
+             )
+    )
+  )

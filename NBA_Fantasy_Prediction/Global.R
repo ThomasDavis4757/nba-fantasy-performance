@@ -14,6 +14,25 @@ library(lubridate)
 library(dplyr)
 library(shinyWidgets)
 
+
+
+
+
+model_data <- nba_data |> 
+  filter(DidNotPlay == FALSE)
+
+model_saved <- lmer("FantasyPoints ~  AvgFantPoints + InjTeamateCount + Pos1 + AvgMPTimeLast10 + AvgFantPointsLast10 + (1|Starters) + (1|OpponentTeamAbv) ", data = model_data)
+summary(model_saved)
+
+
+saveRDS(model_saved, file = "./nba_data_model.rds")
+
+
+
+loaded_model <- readRDS("./nba_data_model.rds")
+
+loaded_model
+
 nba_data <- read_csv('./data/full_nba_data.csv')
 
 nba_data <- nba_data |> mutate(Date = as.Date(Date)) |> 

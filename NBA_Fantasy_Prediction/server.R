@@ -23,6 +23,18 @@ function(input, output, session) {
   
   
   
+  
+  observeEvent(input$show_input, {
+    
+    output$conditional_input <- renderUI({
+      textInput("dynamic_input", "Enter Text:")
+    })
+    
+    
+  })
+  
+  
+  
 
   player_specific_factor <-  function(name) {
     df <- nba_data %>%
@@ -50,12 +62,13 @@ function(input, output, session) {
   
   
   model_summary <- function(name) {
-    return(summary(model(name)))
+    #return(summary(model(name)))
+    return(summary(loaded_model))
   }
   
   
   next5gamesStdev <- function(name) {
-    model_stdev = model(name)
+    model_stdev = loaded_model
     
     init_player_info <- initial_player_info(name)
     
@@ -69,7 +82,7 @@ function(input, output, session) {
       mutate(OppDefRatingAll = getLatestTeamDefRating(OpposingTeamAbv)) |> 
       mutate(OppWinPercentage = getLatestTeamWinPercentage(OpposingTeamAbv)) |> 
       mutate(FantasyPointPrediction = predict(
-        model(name), 
+        model_stdev, 
         tibble( 
           "OppFantDefense: ALL" = OppDefRatingAll,
           #"OpponentWinPercentage" = OppWinPercentage,
@@ -104,7 +117,8 @@ function(input, output, session) {
       labs(title = paste0(name, " Historical and Predicted Fantasy Points"),
            x = "Fantasy Points",
            y = "Density") +
-      theme_minimal()
+      theme_minimal() +
+      ylim(0, .15)
     
     ggplotly(p)
   }
@@ -159,7 +173,7 @@ function(input, output, session) {
       mutate(OppDefRatingAll = getLatestTeamDefRating(OpposingTeamAbv)) |> 
       mutate(OppWinPercentage = getLatestTeamWinPercentage(OpposingTeamAbv)) |> 
       mutate(FantasyPointPrediction = predict(
-        model(name), 
+        loaded_model, 
         tibble(
           "OppFantDefense: ALL" = OppDefRatingAll,
           #"OpponentWinPercentage" = OppWinPercentage,
@@ -522,7 +536,9 @@ function(input, output, session) {
       
   })
   
-  
+  output$hola <- renderText ({
+    "Hello"
+  })
   
   output$modelSummary1 <- renderPrint({
     model_summary(player_name1())
@@ -627,7 +643,13 @@ function(input, output, session) {
   })
   
   output$progress_bar_ui <- renderUI({
-    progressBar(id = "pvalue_bar", value = get_pvalue_significance(get_pvalue())$fill, total = 100, display_pct = TRUE, status = "success")
+    
+    var1 <- "FantasyPoints"
+    var2 <- input$predictVar
+    correlation_value <- cor(plot_data()[[var1]], plot_data()[[var2]], method = "pearson", use = "complete.obs")
+    correlation_percent <- abs(correlation_value) * 100  
+    bar_status <- ifelse(correlation_value >= 0, "success", "danger") 
+    progressBar(id = "correlation_bar", value = correlation_percent, total = 100, display_pct = TRUE, status = bar_status)
   })
   
   get_pvalue_significance <- function(p_value) {

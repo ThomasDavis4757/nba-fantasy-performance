@@ -12,6 +12,25 @@ library(shiny)
 
 fluidPage(
   theme = shinythemes::shinytheme('superhero'),
+  tags$head(
+    tags$style(HTML("
+      .nav-tabs > li > a {
+        border: 2px solid white !important;
+        border-radius: 5px;
+      }
+      
+      .graph-container {
+        border: 3px solid #0D47A1;  /* Dark blue border */
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+      
+      .table-container table {
+        border: 2px solid white;
+      }
+    "))
+  ),
   titlePanel("NBA Player Fantasy Prediction"),
   tabsetPanel(
     tabPanel("Individual Player Correlation", fluid = TRUE, 
@@ -38,7 +57,10 @@ fluidPage(
                              
                              div(style = "flex: 1;",
                                  tableOutput("player1_stats")  
-                             )
+                             ),
+                             div(style= "flex: 1;",
+                                 textInput("prevGamePoints1","Enter Fantasy Points to Compare"),
+                                 tableOutput("chances of abovetable1"))
                          ),
                          br(),
                          plotlyOutput("normalPlot1", height = "400px", width = "100%")  
@@ -54,7 +76,11 @@ fluidPage(
                              ),
                              div(style = "flex: 1;",
                                  tableOutput("player2_stats")
-                             )
+                             ),
+                             
+                             div(style= "flex: 1;",
+                                 textInput("prevGamePoints2","Enter Fantasy Points to Compare"),
+                                 tableOutput("chances of abovetable2"))
                          ),
                          br(),
                          plotlyOutput("normalPlot2", height = "400px", width = "100%")
@@ -70,7 +96,11 @@ fluidPage(
                              ),
                              div(style = "flex: 1;",
                                  tableOutput("player3_stats")
-                             )
+                             ),
+                             
+                             div(style= "flex: 1;",
+                                 textInput("prevGamePoints3","Enter Fantasy Points to Compare"),
+                                 tableOutput("chances of abovetable3")),
                          ),
                          br(),
                          plotlyOutput("normalPlot3", height = "400px", width = "100%")
@@ -90,11 +120,11 @@ fluidPage(
                  actionButton("update_btn", "Update Graph")
                ),
                mainPanel(
-              
+                 
                  #valueBoxOutput("averageBox"),
                  plotOutput("regressionPlot"),
                  #verbatimTextOutput("modelSummaryNew1"),
-                 div(style = "font-size: 24px; font-weight: bold;", textOutput("correlationOutput")),
+                 #div(style = "font-size: 24px; font-weight: bold;", textOutput("correlationOutput")),
                  #verbatimTextOutput("get_pvalues"),
                  div(style = "font-size: 20px;", textOutput("pvalue_significance")),
                  uiOutput("progress_bar_ui")
@@ -123,8 +153,8 @@ fluidPage(
                  
                  tableOutput("player_stats_table_fantasy")
                )
-               )
-               
              )
+             
     )
   )
+)

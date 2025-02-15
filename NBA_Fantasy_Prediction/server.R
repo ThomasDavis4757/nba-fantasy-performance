@@ -53,6 +53,101 @@ function(input, output, session) {
   }
   
   
+  calculate_percentage <- function(mean_value, sd_value, value_to_check) {
+
+    cdf_value <- pnorm(value_to_check, mean = mean_value, sd = sd_value)
+    
+
+    percentage_above <- (1 - cdf_value) * 100
+    
+
+    return(percentage_above)
+  }
+  
+  output$modelChance1 <- renderText({
+    prev_points1 <- as.numeric(input$prevGamePoints1)  
+    stdev1 <- next5gamesStdev(player_name1())[1]
+    mean_value1 <- next5gamesStdev(player_name1())[2]
+    print(mean_value1)
+    glue("Model better result chance: ", round(calculate_percentage(mean_value1, stdev1, prev_points1),2))
+  })
+  
+  output$modelChance2 <- renderText({
+    prev_points2 <- as.numeric(input$prevGamePoints2)  
+    stdev2 <- next5gamesStdev(player_name2())[1]
+    mean_value2 <- next5gamesStdev(player_name2())[2]
+    print(mean_value2)
+    glue("Model better result chance: ", round(calculate_percentage(mean_value2, stdev2, prev_points2),2))
+  })
+  
+  output$modelChance3 <- renderText({
+    prev_points3 <- as.numeric(input$prevGamePoints3)  
+    stdev3 <- next5gamesStdev(player_name3())[1]
+    mean_value3 <- next5gamesStdev(player_name3())[2]
+    print(mean_value3)
+    glue("Model better result chance: ", round(calculate_percentage(mean_value3, stdev3, prev_points3),2))
+  })
+  
+  
+  
+  output$historyChance1 <- renderText({
+    prev_points1 <- as.numeric(input$prevGamePoints1)  
+    player_data1 <- player_specific_data(player_name1())
+    fantasy_points1 <- player_data1$FantasyPoints 
+    
+    # Calculate the percentage of fantasy points greater than prev_points1
+    greater_than_prev1 <- sum(fantasy_points1 > prev_points1, na.rm = TRUE)
+    total_games1 <- length(fantasy_points1)  # Total games played
+    
+    # Ensure total_games1 is not zero to avoid division by zero
+    if (total_games1 > 0) {
+      percentage_above1 <- (greater_than_prev1 / total_games1) * 100
+    } else {
+      percentage_above1 <- 0
+    }
+    
+    glue("Model better result chance: ", round(percentage_above1, 2))
+  })
+  
+  output$historyChance2 <- renderText({
+    prev_points2 <- as.numeric(input$prevGamePoints2)  
+    player_data2 <- player_specific_data(player_name2())
+    fantasy_points2 <- player_data2$FantasyPoints 
+    
+    greater_than_prev2 <- sum(fantasy_points2 > prev_points2, na.rm = TRUE)
+    total_games2 <- length(fantasy_points2)
+    
+    if (total_games2 > 0) {
+      percentage_above2 <- (greater_than_prev2 / total_games2) * 100
+    } else {
+      percentage_above2 <- 0
+    }
+    
+    glue("Model better result chance: ", round(percentage_above2, 2))
+  })
+  
+  output$historyChance3 <- renderText({
+    prev_points3 <- as.numeric(input$prevGamePoints3)  
+    player_data3 <- player_specific_data(player_name3())
+    fantasy_points3 <- player_data3$FantasyPoints 
+    
+    greater_than_prev3 <- sum(fantasy_points3 > prev_points3, na.rm = TRUE)
+    total_games3 <- length(fantasy_points3)
+    
+    if (total_games3 > 0) {
+      percentage_above3 <- (greater_than_prev3 / total_games3) * 100
+    } else {
+      percentage_above3 <- 0
+    }
+    
+    glue("Model better result chance: ", round(percentage_above3, 2))
+  })
+  
+  
+  
+  
+  
+  
   model <- function(name) {
     #model <- lm("FantasyPoints ~  `OppFantDefense: ALL` +  AvgFantPoints + InjTeamateCount + Pos1 + AvgMPTimeLast10 + AvgFantPointsLast10 + IsItPlayer ", data = player_specific_factor())
     model <- lmer("FantasyPoints ~  AvgFantPoints + InjTeamateCount + Pos1 + AvgMPTimeLast10 + AvgFantPointsLast10 + (1|Starters) + (1|OpponentTeamAbv) ", data = player_specific_factor(name))
@@ -642,14 +737,18 @@ function(input, output, session) {
     get_pvalue_significance(get_pvalue())$text
   })
   
-  output$progress_bar_ui <- renderUI({
-    
+  progress_bar_reactive <- eventReactive(input$update_btn, {
     var1 <- "FantasyPoints"
     var2 <- input$predictVar
     correlation_value <- cor(plot_data()[[var1]], plot_data()[[var2]], method = "pearson", use = "complete.obs")
     correlation_percent <- abs(correlation_value) * 100  
-    bar_status <- ifelse(correlation_value >= 0, "success", "danger") 
+    bar_status <- ifelse(correlation_value >= 0, "success", "danger")
+    
     progressBar(id = "correlation_bar", value = correlation_percent, total = 100, display_pct = TRUE, status = bar_status)
+  })
+  
+  output$progress_bar_ui <- renderUI({
+    progress_bar_reactive()  # This will render the updated progress bar
   })
   
   get_pvalue_significance <- function(p_value) {
@@ -684,12 +783,15 @@ function(input, output, session) {
     model_alldata_summary(input$predictVar)
   })
   
-  output$regressionPlot <- renderPlot({
+  plot_data_reactive <- eventReactive(input$update_btn, {
     plot_data() |> 
-      ggplot(aes(x=.data[["FantasyPoints"]], y=.data[[input$predictVar]])) +
-      geom_point()
-    
-    
+      ggplot(aes(x = .data[["FantasyPoints"]], y = .data[[input$predictVar]])) +
+      geom_point() +
+      geom_smooth()
+  })
+  
+  output$regressionPlot <- renderPlot({
+    plot_data_reactive()  # This will render the updated plot
   })
   
   output$correlationOutput <- renderText({
@@ -700,6 +802,18 @@ function(input, output, session) {
     correlation_value <- cor(plot_data()[[var1]], plot_data()[[var2]], method = "pearson", use = "complete.obs")
     
     paste("Correlation between", var1, "and", var2, "is:", round(correlation_value, 2))
+  })
+  
+  
+  update_correlation_text <- eventReactive(input$update_btn, {
+    
+    "What is the correlation?"
+  })
+  
+  output$correlationText <- renderText({
+    
+    update_correlation_text()
+    
   })
 
   
@@ -726,6 +840,12 @@ function(input, output, session) {
   player_name_stats <- eventReactive(input$update_btn3, {
     nameSelection(input$playerName)
   })
+  
+  
+  
+  labeled_player_name_stats <- function() {
+    h3(player_name_stats())
+  }
   
   average3_stats <- function(name) {
     
@@ -813,16 +933,17 @@ function(input, output, session) {
     main <- player_specific_data3_stats(name) |> 
       filter(DidNotPlay == FALSE) |> 
       summarize(
-        average_shots_made = mean(FG),
+        average_shots_made = mean(FG ),
         average_shots_taken = mean(FGA),
-        average_shot_perc = mean(`FG%`),
+        
         average_threep_made = mean(`3P`),
         average_threep_taken = mean(`3PA`),
-        average_threep_perc = mean(`3P%`),
+        
         average_freethrow_made = mean(FTA),
         average_freethrow_taken = mean(FT),
-        average_freethrow_perc = mean(`FT%`),
-
+        average_threep_perc = mean(`3P%`, na.rm = TRUE),
+        average_shot_perc = mean(`FG%`, na.rm = TRUE),
+        average_freethrow_perc = mean(`FT%`, na.rm = TRUE)
       ) 
     
     return(setNames(as.numeric(main), names(main)))  
@@ -848,8 +969,8 @@ function(input, output, session) {
   })
   
 
-  output$playerNameStats <- renderText ({
-    player_name_stats()
+  output$playerNameStats <- renderUI ({
+    h3(player_name_stats())
   })
 
   
@@ -859,5 +980,30 @@ function(input, output, session) {
     HTML(glue('<img src="{update_picture1(player_name_stats())}" width="225" height="300">'))
   })
   
+  
+  generalStatsText <- eventReactive(input$update_btn3, {
+    h3("Game Stats")
+  })
+  
+  shootingStatsText <- eventReactive(input$update_btn3, {
+    h3("Shooting Stats")
+  })
+  
+  fantasyStatsText <- eventReactive(input$update_btn3, {
+    h3("Fantasy Stats")
+  })
+  
+  
+  output$generalStats <- renderUI({
+    generalStatsText()
+  })
+  
+  output$shootingStats <- renderUI({
+    shootingStatsText()
+  })
+  
+  output$fantasyStats <- renderUI({
+    fantasyStatsText()
+  })
   
 }

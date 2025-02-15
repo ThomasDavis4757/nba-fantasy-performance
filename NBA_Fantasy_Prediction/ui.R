@@ -14,22 +14,26 @@ fluidPage(
   theme = shinythemes::shinytheme('superhero'),
   tags$head(
     tags$style(HTML("
-      .nav-tabs > li > a {
-        border: 2px solid white !important;
-        border-radius: 5px;
-      }
-      
-      .graph-container {
-        border: 3px solid #0D47A1;  /* Dark blue border */
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-      }
-      
-      .table-container table {
-        border: 2px solid white;
-      }
-    "))
+    .nav-tabs > li > a {
+      border: 2px solid white !important;
+      border-radius: 5px;
+    }
+    
+    .graph-container {
+      border: 3px solid #0D47A1;  /* Dark blue border */
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .table-container {
+      border: 2px solid white;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    
+    
+  "))
   ),
   titlePanel("NBA Player Fantasy Prediction"),
   tabsetPanel(
@@ -60,7 +64,9 @@ fluidPage(
                              ),
                              div(style= "flex: 1;",
                                  textInput("prevGamePoints1","Enter Fantasy Points to Compare"),
-                                 tableOutput("chances of abovetable1"))
+                                 textOutput("modelChance1"),
+                                 textOutput("historyChance1")
+                                 )
                          ),
                          br(),
                          plotlyOutput("normalPlot1", height = "400px", width = "100%")  
@@ -80,7 +86,9 @@ fluidPage(
                              
                              div(style= "flex: 1;",
                                  textInput("prevGamePoints2","Enter Fantasy Points to Compare"),
-                                 tableOutput("chances of abovetable2"))
+                                 textOutput("modelChance2"),
+                                 textOutput("historyChance2")
+                                 )
                          ),
                          br(),
                          plotlyOutput("normalPlot2", height = "400px", width = "100%")
@@ -100,7 +108,9 @@ fluidPage(
                              
                              div(style= "flex: 1;",
                                  textInput("prevGamePoints3","Enter Fantasy Points to Compare"),
-                                 tableOutput("chances of abovetable3")),
+                                 textOutput("modelChance3"),
+                                 textOutput("historyChance3")
+                                 )
                          ),
                          br(),
                          plotlyOutput("normalPlot3", height = "400px", width = "100%")
@@ -123,10 +133,14 @@ fluidPage(
                  
                  #valueBoxOutput("averageBox"),
                  plotOutput("regressionPlot"),
+                 br(),
                  #verbatimTextOutput("modelSummaryNew1"),
                  #div(style = "font-size: 24px; font-weight: bold;", textOutput("correlationOutput")),
                  #verbatimTextOutput("get_pvalues"),
                  div(style = "font-size: 20px;", textOutput("pvalue_significance")),
+                 br(),
+                 div(style = "font-size: 24px; font-weight: bold;", textOutput("correlationText")),
+                 
                  uiOutput("progress_bar_ui")
                )
              )
@@ -140,21 +154,29 @@ fluidPage(
                  actionButton("update_btn3", "Submit")
                ),
                mainPanel(
-                 textOutput("playerNameStats"),
+                 uiOutput("playerNameStats"),
                  br(),
-                 uiOutput("playerImage"),
-                 br(),
-                 
-                 fluidRow(
-                   column(6, tableOutput("player_stats_table")),
-                   column(6, tableOutput("player_stats_table_shooting"))
-                 ),
-                 br(),
-                 
-                 tableOutput("player_stats_table_fantasy")
+                 div(style = "display: flex; align-items: center; gap: 20px;",
+                     div(style = "text-align: center;", 
+                         uiOutput("playerImage")
+                     ),
+                     div(style = "overflow-x: auto; white-space: nowrap; display: flex; gap: 20px;",
+                         div(class = "table-container", style = "min-width: 300px; text-align: center;",
+                             uiOutput("generalStats"),
+                             tableOutput("player_stats_table")
+                         ),
+                         div(class = "table-container", style = "min-width: 300px; text-align: center;",
+                             uiOutput("shootingStats"),
+                             tableOutput("player_stats_table_shooting")
+                         ),
+                         div(class = "table-container", style = "min-width: 300px; text-align: center;",
+                             uiOutput("fantasyStats"),
+                             tableOutput("player_stats_table_fantasy")
+                         )
+                     )
+                 )
                )
              )
-             
     )
   )
 )

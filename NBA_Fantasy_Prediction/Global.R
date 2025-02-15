@@ -38,9 +38,32 @@ nba_data <- read_csv('./data/full_nba_data.csv')
 nba_data <- nba_data |> mutate(Date = as.Date(Date)) |> 
   mutate(tens = (PTS >= 10) + (TRB >= 10) + (AST >= 10) + (STL >= 10) + (BLK >= 10)) 
 
-selected_columns <- nba_data |> 
-  select(PTS, AST, TRB, BLK, STL, TOV, FT, FTA, `FT%`, FG, FGA, `FG%`,`3P`, `3PA`, `3P%`, TeamAbv, OpponentTeamAbv, InjTeamateCount, OpponentInjTeamateCount, Pos1, `Attend.`, GamePointDiff, `OppFantDefense: ALL`) |>  # Choose the columns you want
-  colnames()
+selected_columns <- c(
+  "Points" = "PTS",
+  "Assists" = "AST",
+  "Rebounds" = "TRB",
+  "Blocks" = "BLK",
+  "Steals" = "STL",
+  "Turnovers" = "TOV",
+  "Free Throws Made" = "FT",
+  "Free Throws Attempted" = "FTA",
+  "Free Throw %" = "FT%",
+  "Field Goals Made" = "FG",
+  "Field Goals Attempted" = "FGA",
+  "Field Goal %" = "FG%",
+  "3-Point Makes" = "3P",
+  "3-Point Attempts" = "3PA",
+  "3-Point %" = "3P%",
+  "Team" = "TeamAbv",
+  "Opponent Team" = "OpponentTeamAbv",
+  "Injured Teammates" = "InjTeamateCount",
+  "Opponent Injured Teammates" = "OpponentInjTeamateCount",
+  "Position" = "Pos1",
+  "Attendance" = "Attend.",
+  "Game Point Difference" = "GamePointDiff",
+  "Opponent Fantasy Defense" = "OppFantDefense: ALL"
+)
+
 
 
 year_games <- read_csv('./data/nba_game_list.csv')
